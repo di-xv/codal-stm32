@@ -7,8 +7,8 @@
 #define NUM_STREAMS 8
 #define NUM_DMA 2
 
-//#define LOG DMESG
-#define LOG(...) ((void)0)
+#define LOG DMESG
+//#define LOG(...) ((void)0)
 
 typedef struct
 {
@@ -66,6 +66,13 @@ MBED_WEAK const DmaMap TheDmaMap[] = //
         {SPI3_BASE, DMA_RX, 1, 2, 0},
         {SPI3_BASE, DMA_TX, 1, 5, 0},
         {SPI3_BASE, DMA_TX, 1, 7, 0},
+
+        // SPI5
+        {SPI5_BASE, DMA_RX, 2, 3, 2},
+        {SPI5_BASE, DMA_RX, 2, 5, 7},
+        {SPI5_BASE, DMA_TX, 2, 4, 2},
+        {SPI5_BASE, DMA_TX, 2, 5, 5},
+        {SPI5_BASE, DMA_TX, 2, 6, 7},
 
         //
         {USART1_BASE, DMA_RX, 2, 2, 4},
