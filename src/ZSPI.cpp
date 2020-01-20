@@ -283,7 +283,7 @@ int ZSPI::transfer(const uint8_t *txBuffer, uint32_t txSize, uint8_t *rxBuffer, 
     fiber_wake_on_event(DEVICE_ID_NOTIFY, transferCompleteEventCode);
     auto res = startTransfer(txBuffer, txSize, rxBuffer, rxSize, NULL, NULL);
     LOG("SPI ->");
-//    schedule();
+    schedule();
     LOG("SPI <-");
     return res;
 }
@@ -308,8 +308,7 @@ int ZSPI::startTransfer(const uint8_t *txBuffer, uint32_t txSize, uint8_t *rxBuf
         CODAL_ASSERT(txSize == rxSize, DEVICE_SPI_ERROR); // we could support this if needed
         res = HAL_SPI_TransmitReceive_DMA(&spi, (uint8_t *) txBuffer, rxBuffer, txSize);
     } else if (txSize) {
-        res = HAL_SPI_Transmit(&spi, (uint8_t *) txBuffer, txSize, 100);
-//        res = HAL_SPI_Transmit_DMA(&spi, (uint8_t *) txBuffer, txSize);
+        res = HAL_SPI_Transmit_DMA(&spi, (uint8_t *) txBuffer, txSize);
     } else if (rxSize) {
         res = HAL_SPI_Receive_DMA(&spi, rxBuffer, rxSize);
     } else {
