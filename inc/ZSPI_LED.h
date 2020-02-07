@@ -41,9 +41,10 @@ public:
      * @param red 0~255
      * @param green 0~255
      * @param blue 0~255
+     * @param auto_delay function will sleep 1ms for spi data write, if do not want auto delay 1ms, set it false
      * @return error code
      */
-    int show(int id, uint8_t red, uint8_t green, uint8_t blue);
+    int show(int id, uint8_t red, uint8_t green, uint8_t blue, bool auto_delay = true);
 
 private:
     bool firstLight;

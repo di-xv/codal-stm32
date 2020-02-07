@@ -72,7 +72,7 @@ int ZSPI_LED::setFrequency(uint32_t frequency) {
     return DEVICE_OK;
 }
 
-int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue) {
+int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue, bool auto_delay) {
 
     if (firstLight) {
         // set default frequency
@@ -108,7 +108,9 @@ int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue) {
     txBuffer[index + 11] = buf_bytes[blue & mask];
 
     transfer(txBuffer, txSize, NULL, 0);
-    target_wait_us(100);
+    if (auto_delay) {
+        target_wait_us(100);
+    }
 
     return DEVICE_OK;
 }
