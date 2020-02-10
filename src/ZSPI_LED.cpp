@@ -26,8 +26,9 @@ ZSPI_LED::ZSPI_LED(codal::Pin &mosi, codal::Pin &miso, codal::Pin &sclk) : codal
 int ZSPI_LED::transfer(const uint8_t *txBuffer, uint32_t txSize, uint8_t *rxBuffer, uint32_t rxSize) {
     fiber_wake_on_event(DEVICE_ID_NOTIFY, transferCompleteEventCode);
     auto res = startTransfer(txBuffer, txSize, rxBuffer, rxSize, NULL, NULL);
+    target_wait_us(100);
     LOG("SPI ->");
-//    schedule();
+    schedule();
     LOG("SPI <-");
     return res;
 }
@@ -52,8 +53,7 @@ int ZSPI_LED::startTransfer(const uint8_t *txBuffer, uint32_t txSize, uint8_t *r
         CODAL_ASSERT(txSize == rxSize, DEVICE_SPI_ERROR); // we could support this if needed
         res = HAL_SPI_TransmitReceive_DMA(&spi, (uint8_t *) txBuffer, rxBuffer, txSize);
     } else if (txSize) {
-        res = HAL_SPI_Transmit(&spi, (uint8_t *) txBuffer, txSize, 100);
-//        res = HAL_SPI_Transmit_DMA(&spi, (uint8_t *) txBuffer, txSize);
+        res = HAL_SPI_Transmit_DMA(&spi, (uint8_t *) txBuffer, txSize);
     } else if (rxSize) {
         res = HAL_SPI_Receive_DMA(&spi, rxBuffer, rxSize);
     } else {
@@ -72,17 +72,15 @@ int ZSPI_LED::setFrequency(uint32_t frequency) {
     return DEVICE_OK;
 }
 
-int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue, bool auto_delay) {
+int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue) {
 
     if (firstLight) {
         // set default frequency
         freq = 3200000;
         needsInit = true;
-        // init spi data
+        // init spi
         transfer(txBuffer, txSize, NULL, 0);
-        target_wait_us(100);
         transfer(txBuffer, txSize, NULL, 0);
-        target_wait_us(100);
         memset(txBuffer, 0x88, txSize - 1);
         firstLight = false;
     }
@@ -108,9 +106,6 @@ int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue, bool auto_d
     txBuffer[index + 11] = buf_bytes[blue & mask];
 
     transfer(txBuffer, txSize, NULL, 0);
-    if (auto_delay) {
-        target_wait_us(100);
-    }
 
     return DEVICE_OK;
 }
