@@ -2,6 +2,7 @@
 // Created by ziwang on 2020/1/20.
 //
 
+#ifdef STM32F412Rx
 #include "ZSPI_LED.h"
 #include "CodalConfig.h"
 #include "ErrorNo.h"
@@ -111,3 +112,5 @@ int ZSPI_LED::show(int id, uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 }
+
+#endif

@@ -67,12 +67,14 @@ MBED_WEAK const DmaMap TheDmaMap[] = //
         {SPI3_BASE, DMA_TX, 1, 5, 0},
         {SPI3_BASE, DMA_TX, 1, 7, 0},
 
+#ifdef SPI5_BASE
         // SPI5
         {SPI5_BASE, DMA_RX, 2, 3, 2},
         {SPI5_BASE, DMA_RX, 2, 5, 7},
         {SPI5_BASE, DMA_TX, 2, 4, 2},
         {SPI5_BASE, DMA_TX, 2, 5, 5},
         {SPI5_BASE, DMA_TX, 2, 6, 7},
+#endif
 
         //
         {USART1_BASE, DMA_RX, 2, 2, 4},
