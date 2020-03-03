@@ -9,7 +9,6 @@
 
 namespace codal {
 class ZSPI_LED : public codal::ZSPI {
-#ifdef STM32F412Rx
 public:
     /**
      * Constructor SPI instance with given pins. But transfer with out dma and do not call schedule
@@ -53,7 +52,6 @@ private:
     uint8_t txBuffer[8 * 3 * 4 + 1] = {};
     uint32_t txSize = 8 * 3 * 4 + 1;
     uint8_t mask = 0x03;
-#endif //STM32F412Rx
 };
 }
 
