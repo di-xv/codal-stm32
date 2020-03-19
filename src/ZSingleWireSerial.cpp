@@ -125,8 +125,9 @@ void ZSingleWireSerial::configureRxInterrupt(int enable)
 {
 }
 
-ZSingleWireSerial::ZSingleWireSerial(Pin& p) : DMASingleWireSerial(p)
+ZSingleWireSerial::ZSingleWireSerial(Pin& p ,int type) : DMASingleWireSerial(p)
 {
+    uartType = type;
     ZERO(uart);
     ZERO(hdma_tx);
     ZERO(hdma_rx);
@@ -135,7 +136,7 @@ ZSingleWireSerial::ZSingleWireSerial(Pin& p) : DMASingleWireSerial(p)
     uart.Instance = (USART_TypeDef *)pinmap_peripheral(p.name, PinMap_UART_TX, 0);
 
     enable_clock((uint32_t)uart.Instance);
-
+/*
     dma_init((uint32_t)uart.Instance, DMA_RX, &hdma_rx, 0);
     dma_set_irq_priority((uint32_t)uart.Instance, DMA_RX, 0);
     __HAL_LINKDMA(&uart, hdmarx, hdma_rx);
@@ -143,14 +144,17 @@ ZSingleWireSerial::ZSingleWireSerial(Pin& p) : DMASingleWireSerial(p)
     dma_init((uint32_t)uart.Instance, DMA_TX, &hdma_tx, 0);
     dma_set_irq_priority((uint32_t)uart.Instance, DMA_TX, 0);
     __HAL_LINKDMA(&uart, hdmatx, hdma_tx);
-
+*/
     // set some reasonable defaults
     uart.Init.BaudRate = 115200;
     uart.Init.WordLength = UART_WORDLENGTH_8B;
     uart.Init.StopBits = UART_STOPBITS_1;
     uart.Init.Parity = UART_PARITY_NONE;
     uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    uart.Init.Mode = UART_MODE_RX;
+    if(uartType == SINGLEWIREUART)
+        uart.Init.Mode = UART_MODE_RX;
+    else
+        uart.Init.Mode = UART_MODE_TX_RX;
     uart.Init.OverSampling = UART_OVERSAMPLING_16;
 
     for (unsigned i = 0; i < ARRAY_SIZE(instances); ++i)
@@ -161,7 +165,14 @@ ZSingleWireSerial::ZSingleWireSerial(Pin& p) : DMASingleWireSerial(p)
             break;
         }
     }
-
+    if(uartType == DOUBLEWIREUART)
+    {
+        pin_mode(p.name, PullNone);
+        pin_function(p.name, pinmap_function(p.name, PinMap_UART_TX, 0));
+        pin_mode(p.name+1, PullNone);
+        pin_function(p.name+1 , pinmap_function(p.name+1, PinMap_UART_RX, 0));
+        HAL_UART_Init(&uart);
+    }
     status = 0;
 }
 
@@ -258,8 +269,11 @@ int ZSingleWireSerial::setMode(SingleWireMode sw)
 
 int ZSingleWireSerial::send(uint8_t* data, int len)
 {
-    if (!(status & TX_CONFIGURED))
-        setMode(SingleWireTx);
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & TX_CONFIGURED))
+            setMode(SingleWireTx);
+    }
 
     int res = HAL_UART_Transmit(&uart, data, len, 3);
 
@@ -271,9 +285,11 @@ int ZSingleWireSerial::send(uint8_t* data, int len)
 
 int ZSingleWireSerial::receive(uint8_t* data, int len)
 {
-    if (!(status & RX_CONFIGURED))
-        setMode(SingleWireRx);
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & RX_CONFIGURED))
+            setMode(SingleWireRx);
+    }
     int res = HAL_UART_Receive(&uart, data, len, 3);
 
     if (res == HAL_OK)
@@ -284,9 +300,11 @@ int ZSingleWireSerial::receive(uint8_t* data, int len)
 
 int ZSingleWireSerial::sendDMA(uint8_t* data, int len)
 {
-    if (!(status & TX_CONFIGURED))
-        setMode(SingleWireTx);
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & TX_CONFIGURED))
+            setMode(SingleWireTx);
+    }
     this->buf = data;
     this->bufLen = len;
 
@@ -299,9 +317,11 @@ int ZSingleWireSerial::sendDMA(uint8_t* data, int len)
 
 int ZSingleWireSerial::receiveDMA(uint8_t* data, int len)
 {
-    if (!(status & RX_CONFIGURED))
-        setMode(SingleWireRx);
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & RX_CONFIGURED))
+            setMode(SingleWireRx);
+    }
     this->buf = data;
     this->bufLen = len;
 
@@ -315,34 +335,42 @@ int ZSingleWireSerial::receiveDMA(uint8_t* data, int len)
 
 int ZSingleWireSerial::abortDMA()
 {
-    if (!(status & (RX_CONFIGURED | TX_CONFIGURED)))
-        return DEVICE_INVALID_PARAMETER;
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & (RX_CONFIGURED | TX_CONFIGURED)))
+            return DEVICE_INVALID_PARAMETER;
+    }
     HAL_UART_Abort(&uart);
     return DEVICE_OK;
 }
 
 int ZSingleWireSerial::getBytesReceived()
 {
-    if (!(status & RX_CONFIGURED))
-        return DEVICE_INVALID_PARAMETER;
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & RX_CONFIGURED))
+            return DEVICE_INVALID_PARAMETER;
+    }
     return hdma_rx.Instance->NDTR;
 }
 
 int ZSingleWireSerial::getBytesTransmitted()
 {
-    if (!(status & TX_CONFIGURED))
-        return DEVICE_INVALID_PARAMETER;
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & TX_CONFIGURED))
+            return DEVICE_INVALID_PARAMETER;
+    }
     return hdma_tx.Instance->NDTR;
 }
 
 int ZSingleWireSerial::sendBreak()
 {
-    if (!(status & TX_CONFIGURED))
-        return DEVICE_INVALID_PARAMETER;
-
+    if (uartType == SINGLEWIREUART)
+    {
+        if (!(status & TX_CONFIGURED))
+            return DEVICE_INVALID_PARAMETER;
+    }
     HAL_LIN_SendBreak(&uart);
     return DEVICE_OK;
 }

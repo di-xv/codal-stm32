@@ -9,6 +9,9 @@
 #include "pinmap.h"
 #include "MemberFunctionCallback.h"
 
+#define DOUBLEWIREUART 1
+#define SINGLEWIREUART 0
+
 namespace codal
 {
 
@@ -20,6 +23,7 @@ namespace codal
 
         uint8_t* buf;
         uint16_t bufLen;
+        int uartType;
 
         protected:
         virtual void configureRxInterrupt(int enable);
@@ -36,7 +40,7 @@ namespace codal
         uint32_t currentBufferIndex;
 
         // only works with a TX uart pin on STM.
-        ZSingleWireSerial(Pin& p);
+        ZSingleWireSerial(Pin& p,int type = SINGLEWIREUART);
 
         virtual int putc(char c);
         virtual int getc();
